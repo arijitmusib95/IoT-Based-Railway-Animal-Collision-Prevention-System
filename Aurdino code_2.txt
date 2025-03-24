@@ -1,0 +1,59 @@
+void loop() {
+  // Trigger the ultrasonic sensor
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+  
+  // Measure the duration of the pulse
+  duration = pulseIn(ECHO_PIN, HIGH);
+  
+  // Calculate the distance (in cm)
+  distance = duration * 0.0344 / 2;
+  
+  // Limit the distance to the maximum range (MAX_DISTANCE)
+  if (distance > MAX_DISTANCE) {
+    distance = MAX_DISTANCE;  // Limit distance to MAX_DISTANCE
+  }
+  
+  // Print the distance to the serial monitor
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+  
+  // Clear the previous frame
+  display.clearDisplay();
+  
+  // Draw the radar sweep circle
+  display.drawCircle(centerX, centerY, radarRadius, SSD1306_WHITE);
+  
+  // Calculate the position of the detected object based on distance
+  // Map distance to the radar radius (limiting the distance to radarRadius)
+  int objRadius = map(distance, 0, MAX_DISTANCE, 0, radarRadius);
+  
+  // Calculate the object's position on the radar
+  float x = centerX + objRadius * cos(angle);
+  float y = centerY + objRadius * sin(angle);
+  
+  // Draw the detected object (small circle to represent the object)
+  display.fillCircle(x, y, 2, SSD1306_WHITE);  
+  
+  // Draw the rotating radar sweep for 180 degrees
+  if (angle >= 0 && angle <= 3.14) { // Sweep only within the 180 degrees (0 to PI radians)
+    int sweepX = centerX + radarRadius * cos(angle);
+    int sweepY = centerY + radarRadius * sin(angle);
+    display.drawLine(centerX, centerY, sweepX, sweepY, SSD1306_WHITE);
+  }
+
+  // Update the radar sweep angle
+  angle += 0.05;  // Adjust the sweep speed (lower value = faster)
+  if (angle >= 3.14) {  // Reset the angle after a 180-degree sweep (PI radians)
+    angle = 0.0;
+  }
+  
+  // Display everything
+  display.display();
+  
+  delay(50);  // Update the display every 50 ms (adjustable)
+}
